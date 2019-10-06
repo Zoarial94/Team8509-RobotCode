@@ -100,8 +100,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
             double drive = -gamepad1.left_stick_y;
             double turn  =  gamepad1.right_stick_x;
             frontRightPower = Range.clip(drive - turn, -1.0, 1.0) ;
-            backRightPower = Range.clip(drive - turn, -1.0, 1.0) ;
-            frontLeftPower = Range.clip(drive + turn, -1.0, 1.0) ;
+            backRightPower = Range.clip(drive + turn, -1.0, 1.0) ;
+            frontLeftPower = Range.clip(drive - turn, -1.0, 1.0) ;
             backLeftPower = Range.clip(drive + turn, -1.0, 1.0) ;
 
             // Send calculated power to wheels
