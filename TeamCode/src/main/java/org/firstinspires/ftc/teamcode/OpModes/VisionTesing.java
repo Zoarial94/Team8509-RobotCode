@@ -27,9 +27,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.playingField.PlayingField;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -50,6 +50,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
+import static org.firstinspires.ftc.teamcode.Constants.VUFORIA_KEY;
+import static org.firstinspires.ftc.teamcode.Constants.mmPerInch;
+
+import org.firstinspires.ftc.teamcode.*;
 
 /**
  * This 2019-2020 OpMode illustrates the basics of using the Vuforia localizer to determine
@@ -82,8 +86,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  */
 
 
-@TeleOp(name="SKYSTONE Vuforia Nav", group ="Concept")
-public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
+@TeleOp(name="Vision Testing", group ="Concept")
+public class VisionTesing extends LinearOpMode {
 
     // IMPORTANT:  For Phone Camera, set 1) the camera source and 2) the orientation, based on how your phone is mounted:
     // 1) Camera Source.  Valid choices are:  BACK (behind screen) or FRONT (selfie side)
@@ -106,12 +110,7 @@ public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
      * Once you've obtained a license key, copy the string from the Vuforia web site
      * and paste it in to your code on the next line, between the double quotes.
      */
-    private static final String VUFORIA_KEY =
-            "AXCmyyr/////AAABmaAlOjhYSUMuqnC79L+csYMS30s8nhVrbQ5s0YED5j3dyq2vYu7aHhvrFpFMJaG6L2hUnXm98+QdvRoeRcALbC0iCcXdY+VcdSIFPHwve6Qr6Oyjz0tsfcCn2fGkTyP5gOO6Ot/+WglV+21XFIeC2Y0zcj+9/awni80ki4xZJID/5dPXeqE9T2VeHdrwnzVyq8DoOzB1LoNL0k1k9kkETyffbDOjQz2qnXgyoMWRn1loy0tZzpjC85OMpoV3bDlF/TJ9CqM8KyVgN/t3/gn6kXjmMxFvU5wWRCSxB23gKeFEIjVrlOJfHyShmrMMuYIbTjkzPY3nV9ctXZ1tj9O6BG6Q9QgEV7TXJvysjkgq5Yl0";
 
-    // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
-    // We will define some constants and conversions here
-    private static final float mmPerInch        = 25.4f;
     private static final float mmTargetHeight   = (6) * mmPerInch;          // the height of the center of the target image above the floor
 
     // Constant for Stone Target
@@ -136,7 +135,12 @@ public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
     private float phoneYRotate    = 0;
     private float phoneZRotate    = 0;
 
+    private PlayingField playingField = null;
+
     @Override public void runOpMode() {
+
+        playingField = new PlayingField();
+
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
          * We can pass Vuforia the handle to a camera preview resource (on the RC phone);
@@ -350,6 +354,14 @@ public class ConceptVuforiaSkyStoneNavigation extends LinearOpMode {
             else {
                 telemetry.addData("Visible Target", "none");
             }
+
+            //  Print playing field
+            if(lastLocation != null) {
+                playingField.setRobotPosition(lastLocation.getTranslation());
+                playingField.printField();
+            }
+
+
             telemetry.update();
         }
 
