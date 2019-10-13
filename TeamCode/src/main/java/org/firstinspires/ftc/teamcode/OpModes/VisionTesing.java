@@ -139,7 +139,7 @@ public class VisionTesing extends LinearOpMode {
 
     @Override public void runOpMode() {
 
-        playingField = new PlayingField();
+        playingField = new PlayingField(telemetry);
 
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -356,9 +356,9 @@ public class VisionTesing extends LinearOpMode {
             }
 
             //  Print playing field
-            if(lastLocation != null) {
+            if(targetVisible && lastLocation != null) {
                 playingField.setRobotPosition(lastLocation.getTranslation());
-                playingField.printField();
+                playingField.printDebug();
             }
 
 

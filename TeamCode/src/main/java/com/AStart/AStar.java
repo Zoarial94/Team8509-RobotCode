@@ -13,7 +13,7 @@ public class AStar {
     private static int DEFAULT_DIAGONAL_COST = 14;
     private int hvCost;
     private int diagonalCost;
-    public Node[][] searchArea;
+    private Node[][] searchArea;
     private PriorityQueue<Node> openList;
     private Set<Node> closedSet;
     private Node initialNode;
