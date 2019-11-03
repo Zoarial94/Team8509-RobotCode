@@ -62,15 +62,15 @@ public class HardwareBot
     Telemetry telemetry         = null;
 
     /* Constructor */
-    public HardwareBot(){
-
-    }
-
-    /* Initialize standard Hardware interfaces */
-    public void init(HardwareMap ahwMap, Telemetry t) {
+    public HardwareBot(Telemetry t, HardwareMap ahwMap){
         // Save reference to Hardware map
         hwMap = ahwMap;
         telemetry = t;
+    }
+
+    /* Initialize standard Hardware interfaces */
+    public void init() {
+
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
