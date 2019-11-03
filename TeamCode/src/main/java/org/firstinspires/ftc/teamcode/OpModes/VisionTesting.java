@@ -29,8 +29,9 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.AutoRobot.AutoRobot;
+import com.playingField.Movement;
 import com.playingField.PlayingField;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -42,6 +43,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.HardwareBot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,8 +55,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 import static org.firstinspires.ftc.teamcode.Constants.VUFORIA_KEY;
 import static org.firstinspires.ftc.teamcode.Constants.mmPerInch;
-
-import org.firstinspires.ftc.teamcode.*;
 
 /**
  * This 2019-2020 OpMode illustrates the basics of using the Vuforia localizer to determine
@@ -130,6 +130,7 @@ public class VisionTesting extends OpMode {
 
     // Class Members
     private OpenGLMatrix lastLocation = null;
+    private OpenGLMatrix trackedLocation = null;
     private VuforiaLocalizer vuforia = null;
     private boolean targetVisible = false;
     private float phoneXRotate    = 0;
@@ -139,7 +140,9 @@ public class VisionTesting extends OpMode {
     VuforiaTrackables targetsSkyStone;
     List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
 
+    private HardwareBot hwBot = new HardwareBot(telemetry, hardwareMap);
     private PlayingField playingField = null;
+    private AutoRobot autoBot = new AutoRobot(hwBot);
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -304,7 +307,7 @@ public class VisionTesting extends OpMode {
 
         // Next, translate the camera lens to where it is on the robot.
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
-        final float CAMERA_FORWARD_DISPLACEMENT  = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+        final float CAMERA_FORWARD_DISPLACEMENT  = 0 * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
         final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
         final float CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
 
@@ -333,6 +336,7 @@ public class VisionTesting extends OpMode {
      */
     @Override
     public void start() {
+        autoBot.enable();
     }
 
     /*
@@ -346,6 +350,7 @@ public class VisionTesting extends OpMode {
         targetVisible = false;
         for (VuforiaTrackable trackable : allTrackables) {
             if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+                trackedLocation = trackable.getLocation();
                 telemetry.addData("Visible Target", trackable.getName());
                 targetVisible = true;
 
@@ -378,9 +383,11 @@ public class VisionTesting extends OpMode {
         if(targetVisible && lastLocation != null) {
             playingField.setRobotPosition(lastLocation.getTranslation());
             playingField.printDebug();
+            playingField.setTarget(trackedLocation.getTranslation());
+            Movement m = playingField.nextDirection();
         }
 
-
+        playingField.update();
         telemetry.update();
     }
 
@@ -391,5 +398,6 @@ public class VisionTesting extends OpMode {
     public void stop() {
         // Disable Tracking when we are done;
         targetsSkyStone.deactivate();
+        autoBot.disable();
     }
 }
