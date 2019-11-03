@@ -57,7 +57,7 @@ public class TestOpMode extends OpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    HardwareBot robot = new HardwareBot(telemetry, hardwareMap);
+    HardwareBot robot = new HardwareBot(telemetry);
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -68,7 +68,7 @@ public class TestOpMode extends OpMode {
         telemetry.update();
 
         //  Initialize Hardware
-        robot.init();
+        robot.init(hardwareMap);
     }
 
     /*

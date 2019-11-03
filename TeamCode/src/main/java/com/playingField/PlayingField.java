@@ -104,8 +104,11 @@ public class PlayingField {
     }
 
     public double getDistFromTarget() {
-        int y = path.get(0).getCol() - initialNode.getCol();
-        int x = path.get(0).getRow() - initialNode.getRow();
+        if(path.isEmpty()) {
+            return 0;
+        }
+        int y = finalNode.getCol() - initialNode.getCol();
+        int x = finalNode.getRow() - initialNode.getRow();
         double d = Math.sqrt(y*y + x*x);
         return d;
     }

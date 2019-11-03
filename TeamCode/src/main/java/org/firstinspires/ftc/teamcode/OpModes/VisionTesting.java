@@ -140,7 +140,7 @@ public class VisionTesting extends OpMode {
     VuforiaTrackables targetsSkyStone;
     List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
 
-    private HardwareBot hwBot = new HardwareBot(telemetry, hardwareMap);
+    private HardwareBot hwBot = new HardwareBot(telemetry);
     private PlayingField playingField = new PlayingField(telemetry);
     private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement());
 
@@ -151,6 +151,7 @@ public class VisionTesting extends OpMode {
     public void init() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        hwBot.init(hardwareMap);
 
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -380,7 +381,6 @@ public class VisionTesting extends OpMode {
         //  Print playing field
         if(targetVisible && lastLocation != null) {
             playingField.setRobotPosition(lastLocation);
-            playingField.printDebug();
             playingField.setTarget(trackedLocation.getTranslation());
             playingField.updateMovement();
 
