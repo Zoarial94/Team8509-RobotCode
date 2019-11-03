@@ -88,7 +88,7 @@ import org.firstinspires.ftc.teamcode.*;
 
 
 @TeleOp(name="Vision Testing", group ="Concept")
-public class VisionTesing extends OpMode {
+public class VisionTesting extends OpMode {
 
     // IMPORTANT:  For Phone Camera, set 1) the camera source and 2) the orientation, based on how your phone is mounted:
     // 1) Camera Source.  Valid choices are:  BACK (behind screen) or FRONT (selfie side)
