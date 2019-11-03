@@ -7,4 +7,7 @@ public final class Constants {
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
     public static final float mmPerInch        = 25.4f;
+
+    public static final int fieldRows = 144; // 12ft x 12ft area
+    public static final int fieldCols = 144;
 }
