@@ -141,8 +141,8 @@ public class VisionTesting extends OpMode {
     List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
 
     private HardwareBot hwBot = new HardwareBot(telemetry, hardwareMap);
-    private PlayingField playingField = null;
-    private AutoRobot autoBot = new AutoRobot(hwBot);
+    private PlayingField playingField = new PlayingField(telemetry);
+    private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement());
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -151,8 +151,6 @@ public class VisionTesting extends OpMode {
     public void init() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
-        playingField = new PlayingField(telemetry);
 
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -381,10 +379,14 @@ public class VisionTesting extends OpMode {
 
         //  Print playing field
         if(targetVisible && lastLocation != null) {
-            playingField.setRobotPosition(lastLocation.getTranslation());
+            playingField.setRobotPosition(lastLocation);
             playingField.printDebug();
             playingField.setTarget(trackedLocation.getTranslation());
-            Movement m = playingField.nextDirection();
+            playingField.updateMovement();
+
+            if(playingField.getDistFromTarget() > 10) {
+                autoBot.drive();
+            }
         }
 
         playingField.update();

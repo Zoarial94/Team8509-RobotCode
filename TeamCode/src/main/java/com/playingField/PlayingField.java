@@ -5,28 +5,24 @@ import com.AStart.Node;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.util.List;
 
+import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.teamcode.Constants.*;
-
-
-
-class Location {
-    public final int x;
-    public final int y;
-    Location(VectorF v) {
-        x = Range.clip((int)(v.get(0) / mmPerInch) + fieldCols/2, 1, 142);
-        y = Range.clip((int)(v.get(1) / mmPerInch) + fieldRows/2, 1, 142);
-    }
-}
 
 public class PlayingField {
 
     boolean fieldIsValid = false;
     boolean pathIsValid = false;
     int validFieldCounter = 0;
+
+    Movement m = new Movement();
 
     Node initialNode = new Node(2, 1);
     Node finalNode = new Node(12, 12);
@@ -41,12 +37,14 @@ public class PlayingField {
         telemetry = t;
     }
 
-    public void setRobotPosition(VectorF pos) {
-        lastLocation = pos;
-        Location l = vectorToLocation(pos);
+    public void setRobotPosition(OpenGLMatrix pos) {
+        Orientation rotation = Orientation.getOrientation(pos, EXTRINSIC, XYZ, DEGREES);
+        lastLocation = pos.getTranslation();
+        m.setFromVector(lastLocation);
+        m.setH(rotation.thirdAngle);
 
-        initialNode.setRow(l.x);
-        initialNode.setCol(l.y);
+        initialNode.setRow((int)m.getX());
+        initialNode.setCol((int)m.getY());
 
         validFieldCounter = 0;
 
@@ -55,10 +53,11 @@ public class PlayingField {
 
     public void setTarget(VectorF pos) {
 
-        Location l = vectorToLocation(pos);
+        double x = Range.clip((pos.get(0) / mmPerInch) + fieldRows/2, 1.0, 142.0);
+        double y = Range.clip((pos.get(1) / mmPerInch) + fieldCols/2, 1.0, 142.0);
 
-        finalNode.setRow(l.x);
-        finalNode.setCol(l.y);
+        finalNode.setRow((int)x);
+        finalNode.setCol((int)y);
 
         pathIsValid = false;
 
@@ -78,28 +77,37 @@ public class PlayingField {
         }
     }
 
-    public Movement nextDirection() {
+    public void updateMovement() {
         if(!pathIsValid) {
             path = aStar.findPath();
             pathIsValid = true;
         }
-        int y = path.get(0).getCol() - initialNode.getCol();
-        int x = path.get(0).getRow() - initialNode.getRow();
+        if(path.isEmpty()) {
+            return;
+        }
+        int y = path.get(1).getCol() - initialNode.getCol();
+        int x = path.get(1).getRow() - initialNode.getRow();
         double a = Math.atan2(y, x) * (180.0/Math.PI);
         double d = Math.sqrt(y*y + x*x);
 
         telemetry.addLine("Start:  X:" + initialNode.getRow() + " Y:" + initialNode.getCol());
         telemetry.addLine("Finish: X:" + finalNode.getRow() + " Y:" + finalNode.getCol());
         telemetry.addLine("Next Move: " + a + " degrees, " + d + " inches");
+    }
 
-        return new Movement(a, d);
+    public Movement getMovement() {
+        return m;
     }
 
     public boolean isValid() {
         return fieldIsValid;
     }
 
-    public static Location vectorToLocation(VectorF v) {
-        return new Location(v);
+    public double getDistFromTarget() {
+        int y = path.get(0).getCol() - initialNode.getCol();
+        int x = path.get(0).getRow() - initialNode.getRow();
+        double d = Math.sqrt(y*y + x*x);
+        return d;
     }
+
 }
