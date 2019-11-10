@@ -100,7 +100,7 @@ public class TestOpMode extends OpMode {
         double strafe = gamepad1.left_stick_x;
 
         if(gamepad1.a) {
-            robot.setMode(1);
+            robot.setMode(HardwareBot.DriveMode.MechanumDrive);
         }
 
         robot.drive(forward, turn, strafe);

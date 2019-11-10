@@ -141,7 +141,7 @@ public class VisionTesting extends OpMode {
 
     private HardwareBot hwBot = new HardwareBot(telemetry);
     private PlayingField playingField = new PlayingField(telemetry);
-    private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement());
+    private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement(), telemetry);
 
     int mode = 0;
 
@@ -153,7 +153,7 @@ public class VisionTesting extends OpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         hwBot.init(hardwareMap);
-        hwBot.setSens(0.3);
+        hwBot.setSens(0.2);
 
         gamepad1.setJoystickDeadzone(joystickDeadzone);
         gamepad2.setJoystickDeadzone(joystickDeadzone);
@@ -397,6 +397,12 @@ public class VisionTesting extends OpMode {
 
         playingField.update();
 
+        if (targetVisible && lastLocation != null) {
+            playingField.setRobotPosition(lastLocation);
+            playingField.setTarget(trackedLocation.getTranslation());
+            playingField.updateMovement();
+        }
+
         if(mode == 0) {
             autoBot.disable();
             hwBot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x);
@@ -404,10 +410,6 @@ public class VisionTesting extends OpMode {
             autoBot.enable();
             //
             if (targetVisible && lastLocation != null) {
-                playingField.setRobotPosition(lastLocation);
-                playingField.setTarget(trackedLocation.getTranslation());
-                playingField.updateMovement();
-
                 if (playingField.getDistFromTarget() > 16) {
                     autoBot.drive();
                 } else {
@@ -417,7 +419,6 @@ public class VisionTesting extends OpMode {
                 autoBot.stopMotors();
             }
         }
-
         telemetry.update();
 
     }

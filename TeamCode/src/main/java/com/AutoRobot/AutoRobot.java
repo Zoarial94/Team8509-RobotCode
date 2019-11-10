@@ -2,20 +2,23 @@ package com.AutoRobot;
 
 import com.playingField.Movement;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.HardwareBot;
 
 public class AutoRobot {
 
     Movement m;
     HardwareBot hwBot;
-    double maxTurn = .3;
-    double maxForward = .3;
+    Telemetry telemetry = null;
+    double maxTurn = .5;
+    double maxForward = .6;
 
     boolean enabled = false;
 
-    public AutoRobot(HardwareBot bot, Movement m) {
+    public AutoRobot(HardwareBot bot, Movement m, Telemetry t) {
         hwBot = bot;
         this.m = m;
+        telemetry = t;
     }
 
     public void enable() {
@@ -34,7 +37,8 @@ public class AutoRobot {
     public void drive() {
         if(enabled) {
             double diffA = m.getAngle() - m.getH();
-            if(Math.abs(diffA) < 20) {
+            telemetry.addLine("Angle to Turn: " + diffA + "\n(" + m.getAngle() + " " + m.getH() + ")");
+            if(Math.abs(diffA) < 10) {
                 hwBot.drive(maxForward, 0, 0);
             } else if(diffA > 0) {
                 hwBot.drive(0, -maxTurn, 0);

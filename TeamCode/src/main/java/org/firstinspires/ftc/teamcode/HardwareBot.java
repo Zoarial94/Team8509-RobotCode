@@ -163,7 +163,7 @@ public class HardwareBot
         if(position == 0.0)
             return 0.0;
 
-        boolean positive = position > 0 ? true : false;
+        boolean positive = position > 0;
 
         double abs = Math.abs(position);
 
