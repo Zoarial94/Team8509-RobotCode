@@ -10,4 +10,8 @@ public final class Constants {
 
     public static final int fieldRows = 144; // 12ft x 12ft area
     public static final int fieldCols = 144;
+
+    public static final float joystickDeadzone = (float)0.08;
+    public static final double encoderCountPerRev = 537.6;
+    public static final double maxEncoderSpeed = 10;
 }

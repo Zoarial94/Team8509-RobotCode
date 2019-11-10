@@ -8,8 +8,8 @@ public class AutoRobot {
 
     Movement m;
     HardwareBot hwBot;
-    double maxTurn = .25;
-    double maxForward = .5;
+    double maxTurn = .3;
+    double maxForward = .3;
 
     boolean enabled = false;
 
@@ -19,12 +19,16 @@ public class AutoRobot {
     }
 
     public void enable() {
-        enabled = true;
+        if(!enabled) {
+            enabled = true;
+        }
     }
 
     public void disable() {
-        stopMotors();
-        enabled = false;
+        if(enabled) {
+            stopMotors();
+            enabled = false;
+        }
     }
 
     public void drive() {
@@ -37,13 +41,16 @@ public class AutoRobot {
             } else {
                 hwBot.drive(0, maxTurn, 0);
             }
-        } else {
-            stopMotors();
-            return;
         }
     }
 
     public void stopMotors() {
-        hwBot.drive(0, 0, 0);
+        if(enabled) {
+           hwBot.stopMotors();
+        }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 }

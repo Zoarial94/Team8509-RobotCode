@@ -53,8 +53,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
-import static org.firstinspires.ftc.teamcode.Constants.VUFORIA_KEY;
-import static org.firstinspires.ftc.teamcode.Constants.mmPerInch;
+import static org.firstinspires.ftc.teamcode.Constants.*;
 
 /**
  * This 2019-2020 OpMode illustrates the basics of using the Vuforia localizer to determine
@@ -155,6 +154,9 @@ public class VisionTesting extends OpMode {
         telemetry.update();
         hwBot.init(hardwareMap);
         hwBot.setSens(0.3);
+
+        gamepad1.setJoystickDeadzone(joystickDeadzone);
+        gamepad2.setJoystickDeadzone(joystickDeadzone);
 
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -347,7 +349,13 @@ public class VisionTesting extends OpMode {
     @Override
     public void loop() {
 
-        if(gamepad1.right_bumper == true) {
+        if(gamepad1.x) {
+            hwBot.setMode(HardwareBot.DriveMode.MechanumDrive);
+        } else if(gamepad1.y){
+            hwBot.setMode(HardwareBot.DriveMode.ArcadeDrive);
+        }
+
+        else if(gamepad1.right_bumper) {
             mode = 1;
         } else {
             mode = 0;
@@ -355,21 +363,17 @@ public class VisionTesting extends OpMode {
 
         telemetry.addLine("Mode: " + mode);
 
-        if(mode == 0) {
-            hwBot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x);
-        }
-
         // check all the trackable targets to see which one (if any) is visible.
         targetVisible = false;
         for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                 trackedLocation = trackable.getLocation();
                 telemetry.addData("Visible Target", trackable.getName());
                 targetVisible = true;
 
                 // getUpdatedRobotLocation() will return null if no new information is available since
                 // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                 if (robotLocationTransform != null) {
                     lastLocation = robotLocationTransform;
                 }
@@ -387,30 +391,35 @@ public class VisionTesting extends OpMode {
             // express the rotation of the robot in degrees.
             Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
             telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-        }
-        else {
+        } else {
             telemetry.addData("Visible Target", "none");
         }
 
-        //
-        if(targetVisible && lastLocation != null) {
-            playingField.setRobotPosition(lastLocation);
-            playingField.setTarget(trackedLocation.getTranslation());
-            playingField.updateMovement();
+        playingField.update();
 
-            if(playingField.getDistFromTarget() > 16 && mode == 1) {
-                autoBot.drive();
+        if(mode == 0) {
+            autoBot.disable();
+            hwBot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x);
+        } else if(mode == 1) {
+            autoBot.enable();
+            //
+            if (targetVisible && lastLocation != null) {
+                playingField.setRobotPosition(lastLocation);
+                playingField.setTarget(trackedLocation.getTranslation());
+                playingField.updateMovement();
+
+                if (playingField.getDistFromTarget() > 16) {
+                    autoBot.drive();
+                } else {
+                    autoBot.stopMotors();
+                }
             } else {
-                autoBot.stopMotors();
-            }
-        } else {
-            if(mode == 1) {
                 autoBot.stopMotors();
             }
         }
 
-        playingField.update();
         telemetry.update();
+
     }
 
     /*
@@ -421,5 +430,6 @@ public class VisionTesting extends OpMode {
         // Disable Tracking when we are done;
         targetsSkyStone.deactivate();
         autoBot.disable();
+        hwBot.stopMotors();
     }
 }

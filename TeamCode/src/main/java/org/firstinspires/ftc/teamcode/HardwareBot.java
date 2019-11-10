@@ -55,11 +55,16 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class HardwareBot
 {
 
+    public enum DriveMode {
+        ArcadeDrive,
+        MechanumDrive
+    }
+
     double sens = .4;
     /* Public OpMode members. */
     private DcMotor frontRightMotor, frontLeftMotor, backRightMotor, backLeftMotor;
 
-    private int mode = 0;
+    private DriveMode mode = DriveMode.ArcadeDrive;
 
     /* local OpMode members. */
     HardwareMap hwMap           = null;
@@ -104,11 +109,7 @@ public class HardwareBot
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        // Set all motors to zero power
-        frontLeftMotor.setPower(0);
-        frontRightMotor.setPower(0);
-        backLeftMotor.setPower(0);
-        backRightMotor.setPower(0);
+        stopMotors();
 
         // Set all motors to run without encoders.
         // May want to use RUN_USING_ENCODERS if encoders are installed.
@@ -127,17 +128,20 @@ public class HardwareBot
 
         double frontRightPower = 0, frontLeftPower = 0, backRightPower = 0, backLeftPower = 0;
 
-        if(mode == 0) {
+        forward = applyDeadzone(forward) * sens;
+        turn = applyDeadzone(turn) * sens;
+        strafe = applyDeadzone(strafe) * sens;
 
-            frontRightPower = Range.clip(forward - turn, -1.0, 1.0) * sens;
-            backRightPower = Range.clip(forward - turn, -1.0, 1.0) * sens;
-            frontLeftPower = Range.clip(forward + turn, -1.0, 1.0) * sens;
-            backLeftPower = Range.clip(forward + turn, -1.0, 1.0) * sens;
-        } else if(mode == 1) {
-            frontRightPower = Range.clip(forward - strafe - turn, -1.0, 1.0) * sens;
-            backRightPower = Range.clip(forward + strafe - turn, -1.0, 1.0) * sens;
-            frontLeftPower = Range.clip(forward + strafe + turn, -1.0, 1.0) * sens;
-            backLeftPower = Range.clip(forward - strafe + turn, -1.0, 1.0) * sens;
+        if(mode == DriveMode.ArcadeDrive) {
+            frontRightPower = forward - turn;
+            backRightPower = forward - turn;
+            frontLeftPower = forward + turn;
+            backLeftPower = forward + turn;
+        } else if(mode == DriveMode.MechanumDrive) {
+            frontRightPower = forward - strafe - turn;
+            backRightPower = forward + strafe - turn;
+            frontLeftPower = forward + strafe + turn;
+            backLeftPower = forward - strafe + turn;
         }
 
         // Send calculated power to wheels
@@ -151,8 +155,33 @@ public class HardwareBot
         telemetry.addData("Back Motors", "left (%.2f), right (%.2f)", backLeftPower, backRightPower);
     }
 
-    public void setMode(int i) {
+    public void setMode(DriveMode i) {
         mode = i;
+    }
+
+    public static double applyDeadzone(double position) {
+        if(position == 0.0)
+            return 0.0;
+
+        boolean positive = position > 0 ? true : false;
+
+        double abs = Math.abs(position);
+
+        if(abs >= 1) {
+            return positive ? 1 : -1;
+        } else if(abs < Constants.joystickDeadzone) {
+            return 0.0;
+        } else {
+            return positive ? (abs - Constants.joystickDeadzone) / (1.0 - Constants.joystickDeadzone) : -1.0 * ((abs - Constants.joystickDeadzone) / (1.0 - Constants.joystickDeadzone));
+        }
+    }
+
+    public void stopMotors() {
+        // Set all motors to zero power
+        frontLeftMotor.setPower(0);
+        frontRightMotor.setPower(0);
+        backLeftMotor.setPower(0);
+        backRightMotor.setPower(0);
     }
 
 }
