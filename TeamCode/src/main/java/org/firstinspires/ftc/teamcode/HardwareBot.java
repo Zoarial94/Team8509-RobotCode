@@ -57,6 +57,8 @@ public class HardwareBot
     /* Public OpMode members. */
     private DcMotor frontRightMotor, frontLeftMotor, backRightMotor, backLeftMotor;
 
+    private int mode = 0;
+
     /* local OpMode members. */
     HardwareMap hwMap           = null;
     Telemetry telemetry         = null;
@@ -107,14 +109,22 @@ public class HardwareBot
 
     }
 
-    public void drive(double forward, double turn) {
+    public void drive(double forward, double turn, double strafe) {
 
-        double frontRightPower, frontLeftPower, backRightPower, backLeftPower;
+        double frontRightPower = 0, frontLeftPower = 0, backRightPower = 0, backLeftPower = 0;
 
-        frontRightPower = Range.clip(forward - turn, -1.0, 1.0) ;
-        backRightPower = Range.clip(forward + turn, -1.0, 1.0) ;
-        frontLeftPower = Range.clip(forward - turn, -1.0, 1.0) ;
-        backLeftPower = Range.clip(forward + turn, -1.0, 1.0) ;
+        if(mode == 0) {
+
+            frontRightPower = Range.clip(forward - turn, -1.0, 1.0);
+            backRightPower = Range.clip(forward + turn, -1.0, 1.0);
+            frontLeftPower = Range.clip(forward - turn, -1.0, 1.0);
+            backLeftPower = Range.clip(forward + turn, -1.0, 1.0);
+        } else if(mode == 1) {
+            frontRightPower = Range.clip(-forward - strafe - turn, -1.0, 1.0);
+            backRightPower = Range.clip(forward + strafe - turn, -1.0, 1.0);
+            frontLeftPower = Range.clip(-forward + strafe + turn, -1.0, 1.0);
+            backLeftPower = Range.clip(forward - strafe + turn, -1.0, 1.0);
+        }
 
         // Send calculated power to wheels
         frontLeftMotor.setPower(frontRightPower);
@@ -126,5 +136,10 @@ public class HardwareBot
         telemetry.addData("Front Motors", "left (%.2f), right (%.2f)", frontLeftPower, frontRightPower);
         telemetry.addData("Back Motors", "left (%.2f), right (%.2f)", backLeftPower, backRightPower);
     }
- }
+
+    public void setMode(int i) {
+        mode = i;
+    }
+
+}
 

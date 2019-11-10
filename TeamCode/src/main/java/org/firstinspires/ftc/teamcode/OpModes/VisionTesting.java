@@ -386,7 +386,11 @@ public class VisionTesting extends OpMode {
 
             if(playingField.getDistFromTarget() > 10) {
                 autoBot.drive();
+            } else {
+                autoBot.stopMotors();
             }
+        } else {
+            autoBot.stopMotors();
         }
 
         playingField.update();

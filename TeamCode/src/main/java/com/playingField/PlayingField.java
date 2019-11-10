@@ -82,11 +82,13 @@ public class PlayingField {
             path = aStar.findPath();
             pathIsValid = true;
         }
-        if(path.isEmpty()) {
+        /*if(path.isEmpty()) {
             return;
-        }
-        int y = path.get(1).getCol() - initialNode.getCol();
-        int x = path.get(1).getRow() - initialNode.getRow();
+        }*/
+        /*int y = path.get(1).getCol() - initialNode.getCol();
+        int x = path.get(1).getRow() - initialNode.getRow();*/
+        int y = finalNode.getCol() - initialNode.getCol();
+        int x = finalNode.getRow() - initialNode.getRow();
         double a = Math.atan2(y, x) * (180.0/Math.PI);
         double d = Math.sqrt(y*y + x*x);
 
@@ -104,9 +106,9 @@ public class PlayingField {
     }
 
     public double getDistFromTarget() {
-        if(path.isEmpty()) {
+        /*if(path.isEmpty()) {
             return 0;
-        }
+        }*/
         int y = finalNode.getCol() - initialNode.getCol();
         int x = finalNode.getRow() - initialNode.getRow();
         double d = Math.sqrt(y*y + x*x);
