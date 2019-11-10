@@ -54,6 +54,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  */
 public class HardwareBot
 {
+
+    double sens = .4;
     /* Public OpMode members. */
     private DcMotor frontRightMotor, frontLeftMotor, backRightMotor, backLeftMotor;
 
@@ -66,6 +68,14 @@ public class HardwareBot
     /* Constructor */
     public HardwareBot(Telemetry t){
         telemetry = t;
+    }
+
+    public void setSens(double sens) {
+        this.sens = Range.clip(Math.abs(sens), 0, 1);
+    }
+
+    public double getSens() {
+        return sens;
     }
 
     /* Initialize standard Hardware interfaces */
@@ -103,10 +113,14 @@ public class HardwareBot
         // Set all motors to run without encoders.
         // May want to use RUN_USING_ENCODERS if encoders are installed.
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);;
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+    }
+
+    public void drive(double f, double t) {
+        drive(f, t, 0);
     }
 
     public void drive(double forward, double turn, double strafe) {
@@ -115,22 +129,22 @@ public class HardwareBot
 
         if(mode == 0) {
 
-            frontRightPower = Range.clip(forward - turn, -1.0, 1.0);
-            backRightPower = Range.clip(forward + turn, -1.0, 1.0);
-            frontLeftPower = Range.clip(forward - turn, -1.0, 1.0);
-            backLeftPower = Range.clip(forward + turn, -1.0, 1.0);
+            frontRightPower = Range.clip(forward - turn, -1.0, 1.0) * sens;
+            backRightPower = Range.clip(forward - turn, -1.0, 1.0) * sens;
+            frontLeftPower = Range.clip(forward + turn, -1.0, 1.0) * sens;
+            backLeftPower = Range.clip(forward + turn, -1.0, 1.0) * sens;
         } else if(mode == 1) {
-            frontRightPower = Range.clip(-forward - strafe - turn, -1.0, 1.0);
-            backRightPower = Range.clip(forward + strafe - turn, -1.0, 1.0);
-            frontLeftPower = Range.clip(-forward + strafe + turn, -1.0, 1.0);
-            backLeftPower = Range.clip(forward - strafe + turn, -1.0, 1.0);
+            frontRightPower = Range.clip(forward - strafe - turn, -1.0, 1.0) * sens;
+            backRightPower = Range.clip(forward + strafe - turn, -1.0, 1.0) * sens;
+            frontLeftPower = Range.clip(forward + strafe + turn, -1.0, 1.0) * sens;
+            backLeftPower = Range.clip(forward - strafe + turn, -1.0, 1.0) * sens;
         }
 
         // Send calculated power to wheels
-        frontLeftMotor.setPower(frontRightPower);
-        frontRightMotor.setPower(backRightPower);
-        backLeftMotor.setPower(frontLeftPower);
-        backRightMotor.setPower(backLeftPower);
+        frontLeftMotor.setPower(frontLeftPower);
+        frontRightMotor.setPower(frontRightPower);
+        backLeftMotor.setPower(backLeftPower);
+        backRightMotor.setPower(backRightPower);
 
 
         telemetry.addData("Front Motors", "left (%.2f), right (%.2f)", frontLeftPower, frontRightPower);

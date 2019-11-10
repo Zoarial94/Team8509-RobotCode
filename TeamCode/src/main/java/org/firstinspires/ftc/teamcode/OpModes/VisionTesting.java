@@ -144,6 +144,8 @@ public class VisionTesting extends OpMode {
     private PlayingField playingField = new PlayingField(telemetry);
     private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement());
 
+    int mode = 0;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -152,6 +154,7 @@ public class VisionTesting extends OpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         hwBot.init(hardwareMap);
+        hwBot.setSens(0.3);
 
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -344,6 +347,17 @@ public class VisionTesting extends OpMode {
     @Override
     public void loop() {
 
+        if(gamepad1.right_bumper == true) {
+            mode = 1;
+        } else {
+            mode = 0;
+        }
+
+        telemetry.addLine("Mode: " + mode);
+
+        if(mode == 0) {
+            hwBot.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x);
+        }
 
         // check all the trackable targets to see which one (if any) is visible.
         targetVisible = false;
@@ -378,19 +392,21 @@ public class VisionTesting extends OpMode {
             telemetry.addData("Visible Target", "none");
         }
 
-        //  Print playing field
+        //
         if(targetVisible && lastLocation != null) {
             playingField.setRobotPosition(lastLocation);
             playingField.setTarget(trackedLocation.getTranslation());
             playingField.updateMovement();
 
-            if(playingField.getDistFromTarget() > 10) {
+            if(playingField.getDistFromTarget() > 16 && mode == 1) {
                 autoBot.drive();
             } else {
                 autoBot.stopMotors();
             }
         } else {
-            autoBot.stopMotors();
+            if(mode == 1) {
+                autoBot.stopMotors();
+            }
         }
 
         playingField.update();

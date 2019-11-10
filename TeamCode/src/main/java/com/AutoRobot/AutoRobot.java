@@ -8,8 +8,8 @@ public class AutoRobot {
 
     Movement m;
     HardwareBot hwBot;
-    double maxTurn = 0.2;
-    double maxForward = 0.3;
+    double maxTurn = .25;
+    double maxForward = .5;
 
     boolean enabled = false;
 
