@@ -29,9 +29,12 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.configuration.ServoFlavor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -62,13 +65,16 @@ public class HardwareBot
 
     double sens = .4;
     /* Public OpMode members. */
-    private DcMotor frontRightMotor, frontLeftMotor, backRightMotor, backLeftMotor;
+    private DcMotor frontRightMotor, frontLeftMotor, backRightMotor, backLeftMotor, elevatorMotor;
+
+    private CRServo arm;
 
     private DriveMode mode = DriveMode.ArcadeDrive;
 
     /* local OpMode members. */
     HardwareMap hwMap           = null;
     Telemetry telemetry         = null;
+
 
     /* Constructor */
     public HardwareBot(Telemetry t){
@@ -96,6 +102,8 @@ public class HardwareBot
         frontRightMotor = hwMap.get(DcMotor.class, "FrontRightMotor");
         backLeftMotor  = hwMap.get(DcMotor.class, "BackLeftMotor");
         backRightMotor = hwMap.get(DcMotor.class, "BackRightMotor");
+        elevatorMotor = hwMap.get (DcMotor.class, "ElevatorMotor");
+        arm = hwMap.get (CRServo.class, "ServoArm");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -103,11 +111,14 @@ public class HardwareBot
         frontRightMotor.setDirection(DcMotor.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotor.Direction.REVERSE);
         backRightMotor.setDirection(DcMotor.Direction.FORWARD);
+        elevatorMotor.setDirection(DcMotor.Direction.REVERSE);
+        arm.setDirection(DcMotorSimple.Direction.FORWARD);
 
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        elevatorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         stopMotors();
 
@@ -117,20 +128,62 @@ public class HardwareBot
         frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        elevatorMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+
+
+
+    }
+
+    public void liftElevator(boolean slow) {
+        if (slow) {
+            elevatorMotor.setPower(.4);
+        } else {
+            elevatorMotor.setPower(.9);
+        }
+    }
+
+    public void lowerElevator() {
+        elevatorMotor.setPower(-0.05);
+    }
+
+    public void stopElevator() {
+        elevatorMotor.setPower(.1);
+    }
+
+    public void extendArm() {
+        arm.setPower(0.8);
+    }
+
+    public void retractArm() {
+        arm.setPower(-0.8);
+    }
+
+    public void stopArm() {
+        arm.setPower(0);
     }
 
     public void drive(double f, double t) {
-        drive(f, t, 0);
+        drive(f, t, 0, false);
     }
 
-    public void drive(double forward, double turn, double strafe) {
+    public void drive(double f, double t, boolean slow) {
+        drive(f, t, 0, slow);
+    }
+
+    public void drive(double forward, double turn, double strafe, boolean slow) {
 
         double frontRightPower = 0, frontLeftPower = 0, backRightPower = 0, backLeftPower = 0;
 
         forward = applyDeadzone(forward) * sens;
         turn = applyDeadzone(turn) * sens;
         strafe = applyDeadzone(strafe) * sens;
+
+        if(slow) {
+            forward *= sens;
+            turn *= sens;
+            strafe *= sens;
+        }
 
         if(mode == DriveMode.ArcadeDrive) {
             frontRightPower = forward - turn;
@@ -142,6 +195,9 @@ public class HardwareBot
             backRightPower = forward + strafe - turn;
             frontLeftPower = forward + strafe + turn;
             backLeftPower = forward - strafe + turn;
+
+            backLeftPower *= -1;
+            backRightPower *= -1;
         }
 
         // Send calculated power to wheels
@@ -182,6 +238,7 @@ public class HardwareBot
         frontRightMotor.setPower(0);
         backLeftMotor.setPower(0);
         backRightMotor.setPower(0);
+        elevatorMotor.setPower(0);
     }
 
 }

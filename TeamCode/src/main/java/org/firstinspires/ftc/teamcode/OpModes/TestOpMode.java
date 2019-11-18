@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -57,6 +58,7 @@ public class TestOpMode extends OpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
+    DigitalChannel Vac1, Valve1;
     HardwareBot robot = new HardwareBot(telemetry);
 
     /*
@@ -69,6 +71,12 @@ public class TestOpMode extends OpMode {
 
         //  Initialize Hardware
         robot.init(hardwareMap);
+
+        Vac1 = hardwareMap.get(DigitalChannel.class, "Vac1");
+        Valve1 = hardwareMap.get(DigitalChannel.class, "Valve1");
+
+        Vac1.setMode(DigitalChannel.Mode.OUTPUT);
+
     }
 
     /*
@@ -84,6 +92,7 @@ public class TestOpMode extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+        robot.setMode(HardwareBot.DriveMode.MechanumDrive);
     }
 
     /*
@@ -96,14 +105,37 @@ public class TestOpMode extends OpMode {
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
         double forward = -gamepad1.left_stick_y;
-        double turn  =  gamepad1.right_stick_x;
-        double strafe = gamepad1.left_stick_x;
+        double turn  =  gamepad1.left_stick_x;
+        double strafe = gamepad1.right_stick_x;
 
-        if(gamepad1.a) {
-            robot.setMode(HardwareBot.DriveMode.MechanumDrive);
+
+        robot.drive(forward, turn, strafe, gamepad1.left_trigger > 0.6);
+
+        if (gamepad2.x){
+            robot.retractArm();
+        } else if (gamepad2.y){
+            robot.extendArm();
+        } else {
+            robot.stopArm();
         }
 
-        robot.drive(forward, turn, strafe);
+        if (gamepad2.b) {
+            robot.liftElevator(gamepad2.left_trigger > 0.6);
+        }else if(gamepad2.a){
+            robot.lowerElevator();
+        } else {
+            robot.stopElevator();
+        }
+
+
+
+
+        // vacuum can be toggled on or off with the a button
+        if(gamepad2.right_bumper) {
+            Vac1.setState(true);
+        } else {
+            Vac1.setState(false);
+        }
 
         telemetry.update();
     }
@@ -117,3 +149,7 @@ public class TestOpMode extends OpMode {
 
 
 }
+
+// beginning of work on the vacuum button thing
+
+
