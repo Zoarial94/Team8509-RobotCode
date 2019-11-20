@@ -59,7 +59,7 @@ public class TestOpMode extends OpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     DigitalChannel Vac1, Valve1;
-    HardwareBot robot = new HardwareBot(telemetry);
+    HardwareBot robot = new HardwareBot(telemetry, runtime);
 
     /*
      * Code to run ONCE when the driver hits INIT

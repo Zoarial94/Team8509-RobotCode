@@ -34,6 +34,7 @@ import com.playingField.Movement;
 import com.playingField.PlayingField;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -139,8 +140,9 @@ public class VisionTesting extends OpMode {
     VuforiaTrackables targetsSkyStone;
     List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
 
-    private HardwareBot hwBot = new HardwareBot(telemetry);
+    private ElapsedTime runtime = new ElapsedTime();
     private PlayingField playingField = new PlayingField(telemetry);
+    private HardwareBot hwBot = new HardwareBot(telemetry, runtime);
     private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement(), telemetry);
 
     int mode = 0;
@@ -340,7 +342,7 @@ public class VisionTesting extends OpMode {
      */
     @Override
     public void start() {
-        autoBot.enable();
+        runtime.reset();
     }
 
     /*
@@ -384,13 +386,13 @@ public class VisionTesting extends OpMode {
         // Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
             // express position (translation) of robot in inches.
-            VectorF translation = lastLocation.getTranslation();
-            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+            //VectorF translation = lastLocation.getTranslation();
+            //telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+            //        translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
 
             // express the rotation of the robot in degrees.
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+            //Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+            //telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
         } else {
             telemetry.addData("Visible Target", "none");
         }

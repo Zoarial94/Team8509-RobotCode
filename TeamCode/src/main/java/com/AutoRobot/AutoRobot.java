@@ -37,7 +37,7 @@ public class AutoRobot {
     public void drive() {
         if(enabled) {
             double diffA = m.getAngle() - m.getH();
-            telemetry.addLine("Angle to Turn: " + diffA + "\n(" + m.getAngle() + " " + m.getH() + ")");
+            //telemetry.addLine("Angle to Turn: " + diffA + "\n(" + m.getAngle() + " " + m.getH() + ")");
             if(Math.abs(diffA) < 10) {
                 hwBot.drive(maxForward, 0, 0, false);
             } else if(diffA > 0) {

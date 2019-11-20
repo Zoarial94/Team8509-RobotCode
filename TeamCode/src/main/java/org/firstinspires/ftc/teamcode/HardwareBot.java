@@ -39,6 +39,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import dalvik.system.DelegateLastClassLoader;
+
 /**
  * This is NOT an opmode.
  *
@@ -73,12 +75,17 @@ public class HardwareBot
 
     /* local OpMode members. */
     HardwareMap hwMap           = null;
-    Telemetry telemetry         = null;
+    Telemetry telemetry;
+    ElapsedTime runtime;
+
+    double prevTime = 0;
+    double powerPerMilli = 0.005;
 
 
     /* Constructor */
-    public HardwareBot(Telemetry t){
+    public HardwareBot(Telemetry t, ElapsedTime r){
         telemetry = t;
+        runtime = r;
     }
 
     public void setSens(double sens) {
@@ -89,8 +96,12 @@ public class HardwareBot
         return sens;
     }
 
+    public void init(HardwareMap ahwmap) {
+        init(ahwmap, false);
+    }
+
     /* Initialize standard Hardware interfaces */
-    public void init(HardwareMap ahwMap) {
+    public void init(HardwareMap ahwMap, boolean encoders) {
         // Save reference to Hardware map
         hwMap = ahwMap;
 
@@ -122,14 +133,23 @@ public class HardwareBot
 
         stopMotors();
 
-        // Set all motors to run without encoders.
-        // May want to use RUN_USING_ENCODERS if encoders are installed.
-        frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        elevatorMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        if(encoders) {
+            // Set all motors to run without encoders.
+            // May want to use RUN_USING_ENCODERS if encoders are installed.
+            frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            elevatorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        } else {
+            // Set all motors to run without encoders.
+            // May want to use RUN_USING_ENCODERS if encoders are installed.
+            frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            elevatorMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
 
 
 
@@ -200,6 +220,18 @@ public class HardwareBot
             backRightPower *= -1;
         }
 
+
+        double runTime = runtime.milliseconds();
+        double timeE = runtime.milliseconds() - prevTime;
+        prevTime = runTime;
+        double powerToAdd = timeE * powerPerMilli;
+
+        frontLeftPower = calcRamp(frontLeftMotor.getPower(), frontLeftPower, powerToAdd);
+        frontRightPower = calcRamp(frontRightMotor.getPower(), frontRightPower, powerToAdd);
+        backLeftPower = calcRamp(backLeftMotor.getPower(), backLeftPower, powerToAdd);
+        backRightPower = calcRamp(backRightMotor.getPower(), backRightPower, powerToAdd);
+
+
         // Send calculated power to wheels
         frontLeftMotor.setPower(frontLeftPower);
         frontRightMotor.setPower(frontRightPower);
@@ -239,6 +271,12 @@ public class HardwareBot
         backLeftMotor.setPower(0);
         backRightMotor.setPower(0);
         elevatorMotor.setPower(0);
+    }
+
+    public double calcRamp(double oldP, double newP, double pToAdd) {
+        return (oldP > newP) ?
+                ((oldP - pToAdd) < newP) ? newP : oldP - pToAdd :   //  Check to see if power goes below
+                ((oldP + pToAdd) > newP) ? newP : oldP + pToAdd ;   //  Check to see if power goes to high
     }
 
 }

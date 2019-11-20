@@ -92,8 +92,8 @@ public class PlayingField {
         double a = Math.atan2(y, x) * (180.0/Math.PI);
         double d = Math.sqrt(y*y + x*x);
 
-        telemetry.addLine("Start:  X:" + initialNode.getRow() + " Y:" + initialNode.getCol());
-        telemetry.addLine("Finish: X:" + finalNode.getRow() + " Y:" + finalNode.getCol());
+        //telemetry.addLine("Start:  X:" + initialNode.getRow() + " Y:" + initialNode.getCol());
+        //telemetry.addLine("Finish: X:" + finalNode.getRow() + " Y:" + finalNode.getCol());
         telemetry.addLine("Next Move: " + a + " degrees, " + d + " inches");
     }
 
