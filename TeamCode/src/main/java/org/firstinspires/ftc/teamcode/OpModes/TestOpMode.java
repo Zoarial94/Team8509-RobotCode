@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.AutoRobot.AutoRobot;
+import com.playingField.Movement;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -60,6 +62,8 @@ public class TestOpMode extends OpMode {
     private ElapsedTime runtime = new ElapsedTime();
     DigitalChannel Vac1, Valve1;
     HardwareBot robot = new HardwareBot(telemetry, runtime);
+    Movement m = new Movement();
+    AutoRobot autoBot = new AutoRobot(robot, m, telemetry, runtime);
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -70,7 +74,7 @@ public class TestOpMode extends OpMode {
         telemetry.update();
 
         //  Initialize Hardware
-        robot.init(hardwareMap);
+        robot.init(hardwareMap, true);
 
         Vac1 = hardwareMap.get(DigitalChannel.class, "Vac1");
         Valve1 = hardwareMap.get(DigitalChannel.class, "Valve1");
@@ -82,8 +86,22 @@ public class TestOpMode extends OpMode {
     /*
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
      */
+
+    boolean b = false;
     @Override
     public void init_loop() {
+        if(!b) {
+            telemetry.addLine("Press a to find the elevator setpoint automatically");
+            telemetry.addLine("Or use the joystick to adjust it");
+        } else {
+            telemetry.addLine("Setting automatically");
+            autoBot.findElevatorSetpoint();
+
+        }
+
+        if(gamepad1.a) {
+            b = true;
+        }
     }
 
     /*
@@ -105,8 +123,8 @@ public class TestOpMode extends OpMode {
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
         double forward = -gamepad1.left_stick_y;
-        double turn  =  gamepad1.left_stick_x;
-        double strafe = gamepad1.right_stick_x;
+        double turn  =  gamepad1.right_stick_x;
+        double strafe = gamepad1.left_stick_x;
 
 
         robot.drive(forward, turn, strafe, gamepad1.left_trigger > 0.6);
@@ -146,8 +164,6 @@ public class TestOpMode extends OpMode {
     @Override
     public void stop() {
     }
-
-
 }
 
 // beginning of work on the vacuum button thing

@@ -1,9 +1,12 @@
 package com.AutoRobot;
 
 import com.playingField.Movement;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.HardwareBot;
+
+import dalvik.system.DelegateLastClassLoader;
 
 public class AutoRobot {
 
@@ -14,11 +17,14 @@ public class AutoRobot {
     double maxForward = .6;
 
     boolean enabled = false;
+    ElapsedTime time;
+    double timer = 0;
 
-    public AutoRobot(HardwareBot bot, Movement m, Telemetry t) {
+    public AutoRobot(HardwareBot bot, Movement m, Telemetry t, ElapsedTime r) {
         hwBot = bot;
         this.m = m;
         telemetry = t;
+        time = r;
     }
 
     public void enable() {
@@ -56,5 +62,9 @@ public class AutoRobot {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public void findElevatorSetpoint() {
+
     }
 }

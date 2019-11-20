@@ -143,7 +143,7 @@ public class VisionTesting extends OpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private PlayingField playingField = new PlayingField(telemetry);
     private HardwareBot hwBot = new HardwareBot(telemetry, runtime);
-    private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement(), telemetry);
+    private AutoRobot autoBot = new AutoRobot(hwBot, playingField.getMovement(), telemetry, runtime);
 
     int mode = 0;
 
@@ -313,9 +313,9 @@ public class VisionTesting extends OpMode {
 
         // Next, translate the camera lens to where it is on the robot.
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
-        final float CAMERA_FORWARD_DISPLACEMENT  = 0 * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+        final float CAMERA_FORWARD_DISPLACEMENT  = 6 * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
         final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
+        final float CAMERA_LEFT_DISPLACEMENT     = 8 * mmPerInch;     // eg: Camera is ON the robot's center line
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)

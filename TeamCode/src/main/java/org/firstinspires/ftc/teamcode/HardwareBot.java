@@ -79,7 +79,7 @@ public class HardwareBot
     ElapsedTime runtime;
 
     double prevTime = 0;
-    double powerPerMilli = 0.005;
+    double powerPerMilli = 0.01;
 
 
     /* Constructor */
@@ -140,7 +140,7 @@ public class HardwareBot
             frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            elevatorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            elevatorMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         } else {
             // Set all motors to run without encoders.
             // May want to use RUN_USING_ENCODERS if encoders are installed.
@@ -157,26 +157,26 @@ public class HardwareBot
 
     public void liftElevator(boolean slow) {
         if (slow) {
-            elevatorMotor.setPower(.4);
+            elevatorMotor.setPower(.35);
         } else {
             elevatorMotor.setPower(.9);
         }
     }
 
     public void lowerElevator() {
-        elevatorMotor.setPower(-0.05);
+        elevatorMotor.setPower(-0.2);
     }
 
     public void stopElevator() {
-        elevatorMotor.setPower(.1);
+        elevatorMotor.setPower(0);
     }
 
     public void extendArm() {
-        arm.setPower(0.8);
+        arm.setPower(1);
     }
 
     public void retractArm() {
-        arm.setPower(-0.8);
+        arm.setPower(-1);
     }
 
     public void stopArm() {
@@ -195,9 +195,9 @@ public class HardwareBot
 
         double frontRightPower = 0, frontLeftPower = 0, backRightPower = 0, backLeftPower = 0;
 
-        forward = applyDeadzone(forward) * sens;
+        /*forward = applyDeadzone(forward) * sens;
         turn = applyDeadzone(turn) * sens;
-        strafe = applyDeadzone(strafe) * sens;
+        strafe = applyDeadzone(strafe) * sens;*/
 
         if(slow) {
             forward *= sens;
@@ -215,14 +215,11 @@ public class HardwareBot
             backRightPower = forward + strafe - turn;
             frontLeftPower = forward + strafe + turn;
             backLeftPower = forward - strafe + turn;
-
-            backLeftPower *= -1;
-            backRightPower *= -1;
         }
 
 
         double runTime = runtime.milliseconds();
-        double timeE = runtime.milliseconds() - prevTime;
+        double timeE = runTime - prevTime;
         prevTime = runTime;
         double powerToAdd = timeE * powerPerMilli;
 
@@ -245,6 +242,13 @@ public class HardwareBot
 
     public void setMode(DriveMode i) {
         mode = i;
+        if(mode == DriveMode.MechanumDrive) {
+            backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
+            backRightMotor.setDirection(DcMotor.Direction.REVERSE);
+        } else {
+            backLeftMotor.setDirection(DcMotor.Direction.REVERSE);
+            backRightMotor.setDirection(DcMotor.Direction.FORWARD);
+        }
     }
 
     public static double applyDeadzone(double position) {
@@ -274,9 +278,22 @@ public class HardwareBot
     }
 
     public double calcRamp(double oldP, double newP, double pToAdd) {
-        return (oldP > newP) ?
-                ((oldP - pToAdd) < newP) ? newP : oldP - pToAdd :   //  Check to see if power goes below
-                ((oldP + pToAdd) > newP) ? newP : oldP + pToAdd ;   //  Check to see if power goes to high
+        if(oldP > newP) {                   // If new p is slower
+            if ((oldP - pToAdd) < newP) {       //
+                return newP;
+            } else {
+                return oldP - pToAdd;   //  Check to see if power goes below
+            }
+        } else {
+            if ((oldP + pToAdd) > newP) {
+                return newP;
+            } else {
+                return oldP + pToAdd;   //  Check to see if power goes to high
+            }
+        }
+    }
+
+    public void debug() {
     }
 
 }
