@@ -29,6 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import android.content.ContentUris;
+
 import com.AutoRobot.AutoRobot;
 import com.AutoRobot.CurrentTask;
 import com.AutoRobot.QueueItem;
@@ -348,11 +350,16 @@ public class AutoVision extends OpMode {
      */
     @Override
     public void start() {
-        runtime.reset();
 
-        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 10, 0));
-        autoBot.addToQueue(new QueueItem(CurrentTask.Wait, 500, 0));
-        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 100));
+        hwBot.setMode(HardwareBot.DriveMode.MechanumDrive);
+
+        autoBot.setTargetToTrack(stoneTarget);
+        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 10));
+        autoBot.addToQueue(new QueueItem(CurrentTask.Wait, 5000, 0));
+        autoBot.addToQueue(new QueueItem(CurrentTask.ApproachTarget, 0, 0));
+        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 10));
+
+        runtime.reset();
     }
 
     /*
@@ -368,7 +375,7 @@ public class AutoVision extends OpMode {
         }
 
         else if(gamepad1.right_bumper) {
-            mode = 1;
+            mode = 0;
         } else {
             mode = 0;
         }
@@ -428,6 +435,17 @@ public class AutoVision extends OpMode {
                 autoBot.stopMotors();
             }
         }*/
+
+        if(mode == 0) {
+            if (autoBot.taskIsFinished() && !autoBot.isQueueEmpty()) {
+                autoBot.nextTask();
+            } else if(autoBot.isQueueEmpty()){
+                telemetry.addLine("Auto is finished.");
+            } else {
+                autoBot.continueTask();
+            }
+        }
+
         telemetry.update();
 
     }

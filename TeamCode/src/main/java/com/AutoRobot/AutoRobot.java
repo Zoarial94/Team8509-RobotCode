@@ -5,6 +5,9 @@ import com.qualcomm.hardware.ams.AMSColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.teamcode.HardwareBot;
 
 import java.util.ArrayList;
@@ -35,6 +38,16 @@ class WaitTaskInfo {
     }
 }
 
+class ApproachTargetInfo {
+    public static double startTime;
+    public static double curTime;
+
+    public static void reset() {
+        startTime = 0;
+        curTime = 0;
+    }
+}
+
 public class AutoRobot {
 
     Movement m;
@@ -51,6 +64,7 @@ public class AutoRobot {
     CurrentTask curTask = CurrentTask.None;
 
     ArrayList<QueueItem> autoQueue = new ArrayList<>();
+    VuforiaTrackable trackable = null;
 
     public AutoRobot(HardwareBot bot, Movement m, Telemetry t, ElapsedTime r) {
         hwBot = bot;
@@ -97,7 +111,27 @@ public class AutoRobot {
     }
 
     public void nextTask() {
+        if(autoQueue.isEmpty()){
+            taskIsFinished = true;
+            return;
+        } else {
+            taskIsFinished = false;
+        }
 
+        QueueItem next =  autoQueue.get(0);
+        autoQueue.remove(0);
+
+        if(next.task == CurrentTask.Move) {
+            move(next.a, next.b);
+            curTask = CurrentTask.Move;
+        } else if(next.task == CurrentTask.Wait){
+            autoWait(next.a);
+            curTask = CurrentTask.Wait;
+        } else if(next.task == CurrentTask.ApproachTarget) {
+            curTask = CurrentTask.ApproachTarget;
+        } else {
+            curTask = CurrentTask.None;
+        }
     }
 
     public void addToQueue(QueueItem q) {
@@ -117,12 +151,9 @@ public class AutoRobot {
     }
 
     public void move(int forwardUnits, int sideUnits) {
-        if(curTask == CurrentTask.None) {
-            curTask = CurrentTask.Move;
-        } else {
-            telemetry.addLine("A task is in progress: " + curTask);
-            return;
-        }
+        MoveInfo.reset();
+
+        MoveInfo.startTime = time.milliseconds();
 
         MoveInfo.forward = forwardUnits;
         MoveInfo.side = sideUnits;
@@ -137,7 +168,15 @@ public class AutoRobot {
         taskIsFinished = false;
     }
 
+    public void autoWait(int period) {
+        WaitTaskInfo.startTime = time.milliseconds();
+        WaitTaskInfo.time = period;
+    }
+
     public boolean continueTask() {
+
+        telemetry.addLine("Current Task: " + curTask);
+
         if(taskIsFinished()) {
             return true;
         }
@@ -150,9 +189,8 @@ public class AutoRobot {
                 if(timeSinceStart < MoveInfo.side * 500) {
                     hwBot.drive(0, 0, maxForward, false);
                 } else {
+                    MoveInfo.sideFinished = true;
                     hwBot.drive(0, 0);
-                    curTask = CurrentTask.None;
-                    taskIsFinished = true;
                 }
             } else if(!MoveInfo.forwardFinished) {
                 double timeSinceStart = time.milliseconds() - MoveInfo.startTime;
@@ -160,10 +198,12 @@ public class AutoRobot {
                 if(timeSinceStart < MoveInfo.forward * 500) {
                     hwBot.drive(maxForward, 0, 0, false);
                 } else {
+                    MoveInfo.forwardFinished = true;
                     hwBot.drive(0, 0);
-                    curTask = CurrentTask.None;
-                    taskIsFinished = true;
                 }
+            } else {
+                curTask = CurrentTask.None;
+                taskIsFinished = true;
             }
         }
         //  Wait Task
@@ -172,12 +212,23 @@ public class AutoRobot {
                 taskIsFinished = true;
             }
         }
+        //  Approach Target
+        else if (curTask == CurrentTask.ApproachTarget) {
+            OpenGLMatrix robotLoc = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+            if(robotLoc != null) {
+                if(robotLoc.getTranslation().get(0) > 20) {
+                    hwBot.drive(0, 0, 0.2, false);
+                } else if(robotLoc.getTranslation().get(1) > 20) {
+                    hwBot.drive(0.2, 0, 0, false);
+                }
+            }
+        }
 
         return taskIsFinished;
     }
 
-    public void setTargetToTrack() {
-
+    public void setTargetToTrack(VuforiaTrackable target) {
+        trackable = target;
     }
 
 }
