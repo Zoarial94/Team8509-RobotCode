@@ -30,6 +30,8 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.AutoRobot.AutoRobot;
+import com.AutoRobot.CurrentTask;
+import com.AutoRobot.QueueItem;
 import com.playingField.PlayingField;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,6 +39,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
@@ -138,7 +141,8 @@ public class AutoVision extends OpMode {
     private float phoneZRotate    = 0;
 
     VuforiaTrackables targetsSkyStone;
-    List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
+    //List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
+    VuforiaTrackable stoneTarget = null;
 
     private ElapsedTime runtime = new ElapsedTime();
     private PlayingField playingField = new PlayingField(telemetry);
@@ -180,9 +184,9 @@ public class AutoVision extends OpMode {
         // sets are stored in the 'assets' part of our application.
         targetsSkyStone = this.vuforia.loadTrackablesFromAsset("Skystone");
 
-        VuforiaTrackable stoneTarget = targetsSkyStone.get(0);
+        stoneTarget = targetsSkyStone.get(0);
         stoneTarget.setName("Stone Target");
-        VuforiaTrackable blueRearBridge = targetsSkyStone.get(1);
+        /*VuforiaTrackable blueRearBridge = targetsSkyStone.get(1);
         blueRearBridge.setName("Blue Rear Bridge");
         VuforiaTrackable redRearBridge = targetsSkyStone.get(2);
         redRearBridge.setName("Red Rear Bridge");
@@ -205,10 +209,10 @@ public class AutoVision extends OpMode {
         VuforiaTrackable rear1 = targetsSkyStone.get(11);
         rear1.setName("Rear Perimeter 1");
         VuforiaTrackable rear2 = targetsSkyStone.get(12);
-        rear2.setName("Rear Perimeter 2");
+        rear2.setName("Rear Perimeter 2");*/
 
         // For convenience, gather together all the trackable objects in one easily-iterable collection */
-        allTrackables.addAll(targetsSkyStone);
+        //allTrackables.addAll(targetsSkyStone);
 
         /**
          * In order for localization to work, we need to tell the system where each target is on the field, and
@@ -235,7 +239,7 @@ public class AutoVision extends OpMode {
                 .translation(0, 0, stoneZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
 
-        //Set the position of the bridge support targets with relation to origin (center of field)
+        /*//Set the position of the bridge support targets with relation to origin (center of field)
         blueFrontBridge.setLocation(OpenGLMatrix
                 .translation(-bridgeX, bridgeY, bridgeZ)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, bridgeRotZ)));
@@ -284,6 +288,7 @@ public class AutoVision extends OpMode {
         rear2.setLocation(OpenGLMatrix
                 .translation(halfField, -quadField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
+         */
 
         //
         // Create a transformation matrix describing where the phone is on the robot.
@@ -322,9 +327,10 @@ public class AutoVision extends OpMode {
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, phoneYRotate, phoneZRotate, phoneXRotate));
 
         /**  Let all the trackable listeners know where the phone is.  */
-        for (VuforiaTrackable trackable : allTrackables) {
+        /*for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(robotFromCamera, parameters.cameraDirection);
-        }
+        }*/
+        ((VuforiaTrackableDefaultListener) stoneTarget.getListener()).setPhoneInformation(robotFromCamera, parameters.cameraDirection);
 
         targetsSkyStone.activate();
 
@@ -343,6 +349,10 @@ public class AutoVision extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+
+        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 10, 0));
+        autoBot.addToQueue(new QueueItem(CurrentTask.Wait, 500, 0));
+        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 100));
     }
 
     /*
@@ -367,37 +377,34 @@ public class AutoVision extends OpMode {
 
         // check all the trackable targets to see which one (if any) is visible.
         targetVisible = false;
-        for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                trackedLocation = trackable.getLocation();
-                telemetry.addData("Visible Target", trackable.getName());
-                targetVisible = true;
+        if (((VuforiaTrackableDefaultListener) stoneTarget.getListener()).isVisible()) {
+            trackedLocation = stoneTarget.getLocation();
+            telemetry.addData("Visible Target", stoneTarget.getName());
+            targetVisible = true;
 
-                // getUpdatedRobotLocation() will return null if no new information is available since
-                // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-                break;
+            // getUpdatedRobotLocation() will return null if no new information is available since
+            // the last time that call was made, or if the trackable is not currently visible.
+            OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) stoneTarget.getListener()).getUpdatedRobotLocation();
+            if (robotLocationTransform != null) {
+                lastLocation = robotLocationTransform;
             }
         }
 
         // Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
-            // express position (translation) of robot in inches.
-            //VectorF translation = lastLocation.getTranslation();
-            //telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-            //        translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+            //  express position (translation) of robot in inches.
+            VectorF translation = lastLocation.getTranslation();
+            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
 
-            // express the rotation of the robot in degrees.
-            //Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            //telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+            //  express the rotation of the robot in degrees.
+            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
         } else {
             telemetry.addData("Visible Target", "none");
         }
 
-        playingField.update();
+        /*playingField.update();
 
         if (targetVisible && lastLocation != null) {
             playingField.setRobotPosition(lastLocation);
@@ -420,7 +427,7 @@ public class AutoVision extends OpMode {
             } else {
                 autoBot.stopMotors();
             }
-        }
+        }*/
         telemetry.update();
 
     }
