@@ -7,24 +7,32 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.HardwareBot;
 
+import java.util.ArrayList;
+
 import dalvik.system.DelegateLastClassLoader;
 
-enum CurrentTask {
-    None,
-    Wait,
-    FindEleveatorSetPoint,
-    Move
-}
-
 class MoveInfo {
-    public int side, forward;
-    boolean sideFinished, forwardFinished;
-    public double startTime;
+    public static int side, forward;
+    static boolean sideFinished, forwardFinished;
+    public static double startTime;
+
+    public static void reset() {
+        side = 0;
+        forward = 0;
+        sideFinished = false;
+        forwardFinished = false;
+        startTime = 0;
+    }
 }
 
 class WaitTaskInfo {
     public static double time = 0;
     public static double startTime = 0;
+
+    public static void reset() {
+        time = 0;
+        startTime = 0;
+    }
 }
 
 public class AutoRobot {
@@ -41,7 +49,8 @@ public class AutoRobot {
 
     boolean taskIsFinished = true;
     CurrentTask curTask = CurrentTask.None;
-    MoveInfo moveTaskInfo = new MoveInfo();
+
+    ArrayList<QueueItem> autoQueue = new ArrayList<>();
 
     public AutoRobot(HardwareBot bot, Movement m, Telemetry t, ElapsedTime r) {
         hwBot = bot;
@@ -87,6 +96,18 @@ public class AutoRobot {
         return taskIsFinished;
     }
 
+    public void nextTask() {
+
+    }
+
+    public void addToQueue(QueueItem q) {
+        autoQueue.add(q);
+    }
+
+    public boolean isQueueEmpty() {
+        return autoQueue.isEmpty();
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -103,14 +124,14 @@ public class AutoRobot {
             return;
         }
 
-        moveTaskInfo.forward = forwardUnits;
-        moveTaskInfo.side = sideUnits;
+        MoveInfo.forward = forwardUnits;
+        MoveInfo.side = sideUnits;
 
         if (forwardUnits == 0) {
-            moveTaskInfo.forwardFinished = true;
+            MoveInfo.forwardFinished = true;
         }
         if (sideUnits == 0) {
-            moveTaskInfo.sideFinished = true;
+            MoveInfo.sideFinished = true;
         }
 
         taskIsFinished = false;
@@ -123,20 +144,20 @@ public class AutoRobot {
 
         //  Move Task
         if(curTask == CurrentTask.Move) {
-            if(!moveTaskInfo.sideFinished) {
-                double timeSinceStart = time.milliseconds() - moveTaskInfo.startTime;
+            if(!MoveInfo.sideFinished) {
+                double timeSinceStart = time.milliseconds() - MoveInfo.startTime;
 
-                if(timeSinceStart < moveTaskInfo.side * 500) {
+                if(timeSinceStart < MoveInfo.side * 500) {
                     hwBot.drive(0, 0, maxForward, false);
                 } else {
                     hwBot.drive(0, 0);
                     curTask = CurrentTask.None;
                     taskIsFinished = true;
                 }
-            } else if(!moveTaskInfo.forwardFinished) {
-                double timeSinceStart = time.milliseconds() - moveTaskInfo.startTime;
+            } else if(!MoveInfo.forwardFinished) {
+                double timeSinceStart = time.milliseconds() - MoveInfo.startTime;
 
-                if(timeSinceStart < moveTaskInfo.forward * 500) {
+                if(timeSinceStart < MoveInfo.forward * 500) {
                     hwBot.drive(maxForward, 0, 0, false);
                 } else {
                     hwBot.drive(0, 0);
@@ -155,6 +176,8 @@ public class AutoRobot {
         return taskIsFinished;
     }
 
+    public void setTargetToTrack() {
 
+    }
 
 }
