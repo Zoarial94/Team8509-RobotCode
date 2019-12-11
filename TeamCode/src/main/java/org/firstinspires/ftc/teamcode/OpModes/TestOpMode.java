@@ -65,6 +65,9 @@ public class TestOpMode extends OpMode {
     Movement m = new Movement();
     AutoRobot autoBot = new AutoRobot(robot, m, telemetry, runtime);
 
+    boolean oldVacButton = false;
+    boolean vacToggle = false;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -149,11 +152,13 @@ public class TestOpMode extends OpMode {
 
 
         // vacuum can be toggled on or off with the a button
-        if(gamepad2.right_bumper) {
-            Vac1.setState(true);
-        } else {
-            Vac1.setState(false);
+        if(gamepad2.right_bumper && oldVacButton == false) {
+            vacToggle = !vacToggle;
         }
+
+        oldVacButton = gamepad2.right_bumper;
+
+        Vac1.setState(vacToggle);
 
         telemetry.update();
     }

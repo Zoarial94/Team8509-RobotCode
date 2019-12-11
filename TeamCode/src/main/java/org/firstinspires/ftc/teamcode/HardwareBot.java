@@ -80,6 +80,7 @@ public class HardwareBot
 
     double prevTime = 0;
     double powerPerMilli = 0.01;
+    double oldMag = 0;
 
 
     /* Constructor */
@@ -136,10 +137,10 @@ public class HardwareBot
         if(encoders) {
             // Set all motors to run without encoders.
             // May want to use RUN_USING_ENCODERS if encoders are installed.
-            frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             elevatorMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         } else {
             // Set all motors to run without encoders.
@@ -200,9 +201,9 @@ public class HardwareBot
         strafe = applyDeadzone(strafe) * sens;*/
 
         if(slow) {
-            forward *= sens;
-            turn *= sens;
-            strafe *= sens;
+            forward *= sens * sens;
+            turn *= sens * sens;
+            strafe *= sens * sens;
         }
 
         if(mode == DriveMode.ArcadeDrive) {
@@ -223,10 +224,10 @@ public class HardwareBot
         prevTime = runTime;
         double powerToAdd = timeE * powerPerMilli;
 
-        frontLeftPower = calcRamp(frontLeftMotor.getPower(), frontLeftPower, powerToAdd);
-        frontRightPower = calcRamp(frontRightMotor.getPower(), frontRightPower, powerToAdd);
-        backLeftPower = calcRamp(backLeftMotor.getPower(), backLeftPower, powerToAdd);
-        backRightPower = calcRamp(backRightMotor.getPower(), backRightPower, powerToAdd);
+        //frontLeftPower = calcRamp(frontLeftMotor.getPower(), frontLeftPower, powerToAdd, slow);
+        //frontRightPower = calcRamp(frontRightMotor.getPower(), frontRightPower, powerToAdd, slow);
+        //backLeftPower = calcRamp(backLeftMotor.getPower(), backLeftPower, powerToAdd, slow);
+        //backRightPower = calcRamp(backRightMotor.getPower(), backRightPower, powerToAdd, slow);
 
 
         // Send calculated power to wheels
@@ -277,13 +278,18 @@ public class HardwareBot
         elevatorMotor.setPower(0);
     }
 
-    public double calcRamp(double oldP, double newP, double pToAdd) {
+    public double calcRamp(double oldP, double newP, double pToAdd, boolean slow) {
+        if(slow) {
+            pToAdd /= 2;
+        }
+
         if(oldP > newP) {                   // If new p is slower
-            if ((oldP - pToAdd) < newP) {       //
+            /*if ((oldP - pToAdd) < newP) {       //
                 return newP;
             } else {
                 return oldP - pToAdd;   //  Check to see if power goes below
-            }
+            }*/
+            return newP;
         } else {
             if ((oldP + pToAdd) > newP) {
                 return newP;
