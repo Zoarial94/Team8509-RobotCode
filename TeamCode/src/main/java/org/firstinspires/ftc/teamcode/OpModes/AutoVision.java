@@ -162,6 +162,7 @@ public class AutoVision extends OpMode {
         telemetry.update();
         hwBot.init(hardwareMap);
         hwBot.setSens(0.2);
+        autoBot.init(hardwareMap);
 
         gamepad1.setJoystickDeadzone(joystickDeadzone);
         gamepad2.setJoystickDeadzone(joystickDeadzone);
@@ -320,9 +321,9 @@ public class AutoVision extends OpMode {
 
         // Next, translate the camera lens to where it is on the robot.
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
-        final float CAMERA_FORWARD_DISPLACEMENT  = 6 * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
-        final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT     = 8 * mmPerInch;     // eg: Camera is ON the robot's center line
+        final float CAMERA_FORWARD_DISPLACEMENT  = 0 * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+        final float CAMERA_VERTICAL_DISPLACEMENT = 8 * mmPerInch;   // eg: Camera is 8 Inches above ground
+        final float CAMERA_LEFT_DISPLACEMENT     = 0 * mmPerInch;     // eg: Camera is ON the robot's center line
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
@@ -354,10 +355,12 @@ public class AutoVision extends OpMode {
         hwBot.setMode(HardwareBot.DriveMode.MechanumDrive);
 
         autoBot.setTargetToTrack(stoneTarget);
-        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 10));
-        autoBot.addToQueue(new QueueItem(CurrentTask.Wait, 5000, 0));
+        //autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 10));
+        //autoBot.addToQueue(new QueueItem(CurrentTask.Wait, 500, 0));
+        //autoBot.addToQueue(new QueueItem(CurrentTask.Move, 10, 0));
+        //autoBot.addToQueue(new QueueItem(CurrentTask.ApproachTarget, 0, 0));
         autoBot.addToQueue(new QueueItem(CurrentTask.ApproachTarget, 0, 0));
-        autoBot.addToQueue(new QueueItem(CurrentTask.Move, 0, 10));
+        autoBot.addToQueue(new QueueItem(CurrentTask.ApproachTarget, 0, 0));
 
         runtime.reset();
     }
@@ -377,7 +380,7 @@ public class AutoVision extends OpMode {
         else if(gamepad1.right_bumper) {
             mode = 0;
         } else {
-            mode = 0;
+            mode = 1;
         }
 
         telemetry.addLine("Mode: " + mode);
@@ -436,7 +439,7 @@ public class AutoVision extends OpMode {
             }
         }*/
 
-        if(mode == 0) {
+        if(mode == 1) {
             if (autoBot.taskIsFinished() && !autoBot.isQueueEmpty()) {
                 autoBot.nextTask();
             } else if(autoBot.isQueueEmpty()){

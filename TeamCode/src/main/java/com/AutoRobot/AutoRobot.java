@@ -1,18 +1,23 @@
 package com.AutoRobot;
 
 import com.playingField.Movement;
-import com.qualcomm.hardware.ams.AMSColorSensor;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cCompassSensor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.teamcode.HardwareBot;
 
 import java.util.ArrayList;
 
-import dalvik.system.DelegateLastClassLoader;
+import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
+import static org.firstinspires.ftc.teamcode.Constants.mmPerInch;
 
 class MoveInfo {
     public static int side, forward;
@@ -40,11 +45,20 @@ class WaitTaskInfo {
 
 class ApproachTargetInfo {
     public static double startTime;
-    public static double curTime;
+    public static double time;
+    public static Task curTask;
+    enum Task {
+        None,
+        MoveX,
+        MoveY,
+        Rotate,
+        Wait
+    }
 
     public static void reset() {
         startTime = 0;
-        curTime = 0;
+        time = 0;
+        curTask = Task.None;
     }
 }
 
@@ -65,12 +79,19 @@ public class AutoRobot {
 
     ArrayList<QueueItem> autoQueue = new ArrayList<>();
     VuforiaTrackable trackable = null;
+    ModernRoboticsI2cCompassSensor compass;
+    HardwareMap hwMap = null;
 
     public AutoRobot(HardwareBot bot, Movement m, Telemetry t, ElapsedTime r) {
         hwBot = bot;
         this.m = m;
         telemetry = t;
         time = r;
+    }
+
+    public void init(HardwareMap hwMap) {
+        this.hwMap = hwMap;
+        compass = hwMap.get(ModernRoboticsI2cCompassSensor.class, "compass");
     }
 
     public void enable() {
@@ -118,16 +139,16 @@ public class AutoRobot {
             taskIsFinished = false;
         }
 
-        QueueItem next =  autoQueue.get(0);
-        autoQueue.remove(0);
+        QueueItem next = autoQueue.remove(0);
 
         if(next.task == CurrentTask.Move) {
-            move(next.a, next.b);
+            setupAutoMove(next.a, next.b);
             curTask = CurrentTask.Move;
         } else if(next.task == CurrentTask.Wait){
-            autoWait(next.a);
+            setupAutoWait(next.a);
             curTask = CurrentTask.Wait;
         } else if(next.task == CurrentTask.ApproachTarget) {
+            setupApproachTarget();
             curTask = CurrentTask.ApproachTarget;
         } else {
             curTask = CurrentTask.None;
@@ -150,7 +171,7 @@ public class AutoRobot {
 
     }
 
-    public void move(int forwardUnits, int sideUnits) {
+    public void setupAutoMove(int forwardUnits, int sideUnits) {
         MoveInfo.reset();
 
         MoveInfo.startTime = time.milliseconds();
@@ -164,21 +185,23 @@ public class AutoRobot {
         if (sideUnits == 0) {
             MoveInfo.sideFinished = true;
         }
-
-        taskIsFinished = false;
     }
 
-    public void autoWait(int period) {
+    public void setupAutoWait(int period) {
         WaitTaskInfo.startTime = time.milliseconds();
         WaitTaskInfo.time = period;
     }
 
-    public boolean continueTask() {
+    public void setupApproachTarget() {
+        ApproachTargetInfo.reset();
+    }
+
+    public void continueTask() {
 
         telemetry.addLine("Current Task: " + curTask);
 
         if(taskIsFinished()) {
-            return true;
+            return;
         }
 
         //  Move Task
@@ -191,6 +214,7 @@ public class AutoRobot {
                 } else {
                     MoveInfo.sideFinished = true;
                     hwBot.drive(0, 0);
+                    finishCurrentTask();
                 }
             } else if(!MoveInfo.forwardFinished) {
                 double timeSinceStart = time.milliseconds() - MoveInfo.startTime;
@@ -200,35 +224,106 @@ public class AutoRobot {
                 } else {
                     MoveInfo.forwardFinished = true;
                     hwBot.drive(0, 0);
+                    finishCurrentTask();
                 }
-            } else {
-                curTask = CurrentTask.None;
-                taskIsFinished = true;
             }
         }
         //  Wait Task
         else if (curTask == CurrentTask.Wait) {
             if(time.milliseconds() - WaitTaskInfo.startTime >= WaitTaskInfo.time) {
-                taskIsFinished = true;
+                finishCurrentTask();
             }
         }
         //  Approach Target
         else if (curTask == CurrentTask.ApproachTarget) {
+            telemetry.addLine("Approack Task: " + ApproachTargetInfo.curTask);
             OpenGLMatrix robotLoc = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
             if(robotLoc != null) {
-                if(robotLoc.getTranslation().get(0) > 20) {
-                    hwBot.drive(0, 0, 0.2, false);
-                } else if(robotLoc.getTranslation().get(1) > 20) {
-                    hwBot.drive(0.2, 0, 0, false);
+                switch(ApproachTargetInfo.curTask) {
+                    case None:
+                        if(Math.abs(getHeading(robotLoc)) > 15){
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Rotate;
+                        } else if(Math.abs(getYPos(robotLoc)) > 2 * mmPerInch) {
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.MoveX;
+                        } else if(Math.abs(getXPos(robotLoc)) > 2 * mmPerInch) {
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.MoveY;
+                        }
+                        break;
+                    case MoveX:
+                        double x = Math.abs(getXPos(robotLoc));
+                        if (x > 15 * mmPerInch) {
+                            hwBot.drive(maxForward * 0.5, 0, 0, false);
+                        } else if (x > 2 * mmPerInch) {
+                            hwBot.drive(maxForward * 0.2, 0, 0,  false);
+                        } else {
+                            hwBot.drive(0, 0);
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Wait;
+                            ApproachTargetInfo.time = 200;
+                            ApproachTargetInfo.startTime = time.milliseconds();
+                        }
+                        break;
+                    case MoveY:
+                        double y = Math.abs(getYPos(robotLoc));
+                        if (y > 15 * mmPerInch) {
+                            hwBot.drive(0, 0, maxForward * 0.5, false);
+                        } else if (y > 2 * mmPerInch) {
+                            hwBot.drive(0, 0, maxForward * 0.2, false);
+                        } else {
+                            hwBot.drive(0, 0);
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Wait;
+                            ApproachTargetInfo.time = 200;
+                            ApproachTargetInfo.startTime = time.milliseconds();
+                        }
+                        break;
+                    case Rotate:
+                        double toRot = getHeading(robotLoc);
+                        telemetry.addLine("Heading: " + toRot);
+                        if(Math.abs(toRot) < 10) {
+                            hwBot.drive(0, 0);
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Wait;
+                            ApproachTargetInfo.time = 200;
+                            ApproachTargetInfo.startTime = time.milliseconds();
+                        } else if(toRot > 0) {
+                            hwBot.drive(0, maxForward * 0.2, 0, false);
+                        } else {
+                            hwBot.drive(0, maxForward * -0.2, 0, false);
+                        }
+                        break;
+                    case Wait:
+                        if(time.milliseconds() >= ApproachTargetInfo.startTime + ApproachTargetInfo.time) {
+                            ApproachTargetInfo.curTask = ApproachTargetInfo.Task.None;
+                        }
+                        break;
+
                 }
             }
+        } else {
+            finishCurrentTask();
         }
-
-        return taskIsFinished;
     }
+
+    private double getHeading(OpenGLMatrix robotLoc) {
+        return Orientation.getOrientation(robotLoc, EXTRINSIC, XYZ, DEGREES).thirdAngle;
+    }
+
+    private double getXPos(OpenGLMatrix robotLoc) {
+        return robotLoc.getTranslation().get(0);
+    }
+
+    private double getYPos(OpenGLMatrix robotLoc) {
+        return robotLoc.getTranslation().get(1);
+    }
+
+
+
 
     public void setTargetToTrack(VuforiaTrackable target) {
         trackable = target;
+    }
+
+    void finishCurrentTask() {
+        curTask = CurrentTask.None;
+        taskIsFinished = true;
     }
 
 }
