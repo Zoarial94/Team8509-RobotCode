@@ -64,6 +64,8 @@ class ApproachTargetInfo {
 
 public class AutoRobot {
 
+    static final float far = 20 * mmPerInch, close = 10 * mmPerInch, headingError = 15, deadTime = 100;
+
     Movement m;
     HardwareBot hwBot;
     Telemetry telemetry = null;
@@ -241,52 +243,52 @@ public class AutoRobot {
             if(robotLoc != null) {
                 switch(ApproachTargetInfo.curTask) {
                     case None:
-                        if(Math.abs(getHeading(robotLoc)) > 15){
+                        if(Math.abs(getHeading(robotLoc)) > headingError){
                             ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Rotate;
-                        } else if(Math.abs(getYPos(robotLoc)) > 2 * mmPerInch) {
+                        } else if(Math.abs(getYPos(robotLoc)) > close) {
                             ApproachTargetInfo.curTask = ApproachTargetInfo.Task.MoveX;
-                        } else if(Math.abs(getXPos(robotLoc)) > 2 * mmPerInch) {
+                        } else if(Math.abs(getXPos(robotLoc)) > close) {
                             ApproachTargetInfo.curTask = ApproachTargetInfo.Task.MoveY;
                         }
                         break;
                     case MoveX:
                         double x = Math.abs(getXPos(robotLoc));
-                        if (x > 15 * mmPerInch) {
-                            hwBot.drive(maxForward * 0.5, 0, 0, false);
-                        } else if (x > 2 * mmPerInch) {
+                        if (x > far) {
+                            hwBot.drive(maxForward * 0.4, 0, 0, false);
+                        } else if (x > close) {
                             hwBot.drive(maxForward * 0.2, 0, 0,  false);
                         } else {
                             hwBot.drive(0, 0);
                             ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Wait;
-                            ApproachTargetInfo.time = 200;
+                            ApproachTargetInfo.time = deadTime;
                             ApproachTargetInfo.startTime = time.milliseconds();
                         }
                         break;
                     case MoveY:
                         double y = Math.abs(getYPos(robotLoc));
-                        if (y > 15 * mmPerInch) {
-                            hwBot.drive(0, 0, maxForward * 0.5, false);
-                        } else if (y > 2 * mmPerInch) {
+                        if (y > far) {
+                            hwBot.drive(0, 0, maxForward * 0.4, false);
+                        } else if (y > close) {
                             hwBot.drive(0, 0, maxForward * 0.2, false);
                         } else {
                             hwBot.drive(0, 0);
                             ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Wait;
-                            ApproachTargetInfo.time = 200;
+                            ApproachTargetInfo.time = deadTime;
                             ApproachTargetInfo.startTime = time.milliseconds();
                         }
                         break;
                     case Rotate:
                         double toRot = getHeading(robotLoc);
                         telemetry.addLine("Heading: " + toRot);
-                        if(Math.abs(toRot) < 10) {
+                        if(Math.abs(toRot) < headingError) {
                             hwBot.drive(0, 0);
                             ApproachTargetInfo.curTask = ApproachTargetInfo.Task.Wait;
-                            ApproachTargetInfo.time = 200;
+                            ApproachTargetInfo.time = deadTime;
                             ApproachTargetInfo.startTime = time.milliseconds();
                         } else if(toRot > 0) {
-                            hwBot.drive(0, maxForward * 0.2, 0, false);
+                            hwBot.drive(0, maxForward * 0.25, 0, false);
                         } else {
-                            hwBot.drive(0, maxForward * -0.2, 0, false);
+                            hwBot.drive(0, maxForward * -0.25, 0, false);
                         }
                         break;
                     case Wait:

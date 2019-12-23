@@ -132,10 +132,10 @@ public class TestOpMode extends OpMode {
 
         robot.drive(forward, turn, strafe, gamepad1.left_trigger > 0.6);
 
-        if (gamepad2.x){
-            robot.retractArm();
-        } else if (gamepad2.y){
+        if (gamepad2.right_stick_y < -0.5){
             robot.extendArm();
+        } else if (gamepad2.right_stick_y > 0.5){
+            robot.retractArm();
         } else {
             robot.stopArm();
         }
@@ -148,7 +148,13 @@ public class TestOpMode extends OpMode {
             robot.stopElevator();
         }
 
-
+        if(gamepad2.x) {
+            robot.openClaw();
+        } else if(gamepad2.y) {
+            robot.closeClaw();
+        } else {
+            telemetry.addLine("Position: " + robot.getPos());
+        }
 
 
         // vacuum can be toggled on or off with the a button

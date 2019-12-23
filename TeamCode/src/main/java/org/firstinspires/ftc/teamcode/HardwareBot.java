@@ -71,6 +71,8 @@ public class HardwareBot
 
     private CRServo arm;
 
+    private Servo claw;
+
     private DriveMode mode = DriveMode.ArcadeDrive;
 
     /* local OpMode members. */
@@ -116,6 +118,7 @@ public class HardwareBot
         backRightMotor = hwMap.get(DcMotor.class, "BackRightMotor");
         elevatorMotor = hwMap.get (DcMotor.class, "ElevatorMotor");
         arm = hwMap.get (CRServo.class, "ServoArm");
+        claw = hwMap.get(Servo.class, "ServoClaw");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -125,6 +128,7 @@ public class HardwareBot
         backRightMotor.setDirection(DcMotor.Direction.FORWARD);
         elevatorMotor.setDirection(DcMotor.Direction.REVERSE);
         arm.setDirection(DcMotorSimple.Direction.FORWARD);
+        claw.setDirection(Servo.Direction.FORWARD);
 
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -203,7 +207,7 @@ public class HardwareBot
         if(slow) {
             forward *= sens * sens;
             turn *= sens * sens;
-            strafe *= sens * sens;
+            strafe *= sens * (sens + .1);
         }
 
         if(mode == DriveMode.ArcadeDrive) {
@@ -297,6 +301,18 @@ public class HardwareBot
                 return oldP + pToAdd;   //  Check to see if power goes to high
             }
         }
+    }
+
+    public void openClaw() {
+        claw.setPosition(0.3);
+    }
+
+    public void closeClaw() {
+        claw.setPosition(.9);
+    }
+
+    public double getPos() {
+        return claw.getPosition();
     }
 
     public void debug() {
