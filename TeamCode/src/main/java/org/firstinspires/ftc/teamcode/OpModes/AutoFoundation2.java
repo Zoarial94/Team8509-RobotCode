@@ -62,8 +62,8 @@ import org.firstinspires.ftc.teamcode.HardwareBot;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Auto Foundation", group="Pushbot")
-public class AutoFoundation extends LinearOpMode {
+@Autonomous(name="Auto Foundation2", group="Pushbot")
+public class AutoFoundation2 extends LinearOpMode {
 
     /* Declare OpMode members. */
     private ElapsedTime     runtime = new ElapsedTime();
@@ -117,7 +117,7 @@ public class AutoFoundation extends LinearOpMode {
         sleep(700);
 
         robot.stopElevator();
-        robot.drive(0.3, 0, 1, false);
+        robot.drive(0.3, 0, -1, false);
 
         sleep(1700); // Pulled foundation back and raised elevator
 
@@ -125,19 +125,19 @@ public class AutoFoundation extends LinearOpMode {
 
         sleep(1500);
 
-        robot.drive(0, 0, -1, false);
+        robot.drive(0, 0, 1, false);
 
         sleep(1700);
 
-        robot.drive(0, 1, 0, false);
+        robot.drive(0, -1, 0, false);
 
         sleep(850);
 
-        robot.drive(0, 0, 1, false);
+        robot.drive(0, 0, -1, false);
 
         sleep(2700); // push into the wall
 
-        robot.drive(0, 0, 0.5, false);
+        robot.drive(0, 0, -0.5, false);
 
         sleep(200);
 

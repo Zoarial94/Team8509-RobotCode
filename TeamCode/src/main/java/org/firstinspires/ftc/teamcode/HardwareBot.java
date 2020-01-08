@@ -304,11 +304,11 @@ public class HardwareBot
     }
 
     public void openClaw() {
-        claw.setPosition(0.3);
+        claw.setPosition(0.2);
     }
 
     public void closeClaw() {
-        claw.setPosition(.9);
+        claw.setPosition(1);
     }
 
     public double getPos() {
